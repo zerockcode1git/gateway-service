@@ -79,6 +79,15 @@ resilience4j:
         # 자동 HALF-OPEN 전환 여부
         automatic-transition-from-open-to-half-open-enabled: true
 
+  timelimiter:
+    instances:
+      productServiceCB:
+        timeout-duration: 7s
+
+      reviewServiceCB:
+        timeout-duration: 7s
+
+
 server:
   port: 8080
 
