@@ -7,8 +7,8 @@ spring:
      server:
        webflux:
          routes:
-           - id: product-service
-             uri: http://product-service.product-service.svc.cluster.local:8081
+           - id: gateway-service
+             uri: http://gateway-service.gateway-service.svc.cluster.local:8080
              predicates:
                - Path=/api/products/**
              filters:

@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+ name: gateway-service
+ namespace: argocd
+ finalizers:
+   - resources-finalizer.argocd.argoproj.io
+spec:
+ project: default
+ source:
+   repoURL: https://github.com/zerockcode1git/gateway-service.git
+   targetRevision: main
+   path: k8s
+ destination:
+   server: https://kubernetes.default.svc
+   namespace: gateway-service
+
+
+
+ syncPolicy:
+   automated:
+     prune: true       # 삭제된 리소스 자동 정리
+     selfHeal: true    # 클러스터 상태 drift 시 자동 복구
+   syncOptions:
+     - CreateNamespace=true    # gateway-service 네임스페이스 없으면 자동 생성
+     - ApplyOutOfSyncOnly=true # 변경된 리소스만 적용
+   retry:
+     limit: 3
+     backoff:
+       duration: 10s
+       factor: 2
+       maxDuration: 3m
+ ignoreDifferences:
+     - group: apps
+       kind: Deployment
+       jsonPointers:
+       # Reloader가 주입하는 어노테이션 변경만 ArgoCD가 무시하도록 설정
+       - /spec/template/metadata/annotations/reloader.stakater.com~1last-reloaded
