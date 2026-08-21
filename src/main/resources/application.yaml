@@ -1,41 +1,80 @@
 
 spring:
- application:
-   name: gateway-service
- cloud:
-   gateway:
-     server:
-       webflux:
-         routes:
-           - id: product-service
-             uri: http://product-service.product-service.svc.cluster.local:8081
-             predicates:
-               - Path=/api/products/**
-             filters:
-               - StripPrefix=2
-              
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: product-service
+              uri: http://product-service.product-service.svc.cluster.local:8081
+              predicates:
+                - Path=/api/products/**
+              filters:
+                - StripPrefix=2
 
-           - id: user-service
-             uri: http://user-service.user-service.svc.cluster.local:8082
-             predicates:
-               - Path=/api/users/**
-             filters:
+            - id: user-service
+              uri: http://user-service.user-service.svc.cluster.local:8082
+              predicates:
+                - Path=/api/users/**
+              filters:
                - StripPrefix=2
-               
-           - id: review-service
-             uri: http://review-service.review-service.svc.cluster.local:8083
-             predicates:
-               - Path=/api/reviews/**
-             filters:
+               - name: CircuitBreaker
+                 args:
+                   name: productServiceCB
+
+
+            - id: review-service
+              uri: http://review-service.review-service.svc.cluster.local:8083
+              predicates:
+                - Path=/api/reviews/**
+              filters:
                - StripPrefix=2
-  
-           - id: order-service
-             uri: http://order-service.order-service.svc.cluster.local:8084
-             predicates:
-               - Path=/api/orders/**
-             filters:
-               - StripPrefix=2
+               - name: CircuitBreaker
+                 args:
+                   name: reviewServiceCB
+
+
+            - id: order-service
+              uri: http://order-service.order-service.svc.cluster.local:8084
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - StripPrefix=2
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        sliding-window-type: COUNT_BASED          # 요청 횟수 기반
+        sliding-window-size: 10                   # 최근 10개 요청 기준
+        failure-rate-threshold: 50                # 실패율 50% 초과 시 OPEN
+        minimum-number-of-calls: 5                # 최소 5번 요청 후 판단 시작
+
+        # OPEN → HALF-OPEN 전환
+        wait-duration-in-open-state: 10s          # 10초 후 HALF-OPEN 시도
+        permitted-number-of-calls-in-half-open-state: 3  # HALF-OPEN에서 3개 요청 테스트
+
+        # 자동 HALF-OPEN 전환 여부
+        automatic-transition-from-open-to-half-open-enabled: true
+
+      productServiceCB:
+        # OPEN → HALF-OPEN 전환
+        wait-duration-in-open-state: 20s          # 10초 후 HALF-OPEN 시도
+
+      reviewServiceCB:
+        sliding-window-type: COUNT_BASED          # 요청 횟수 기반
+        sliding-window-size: 10                   # 최근 10개 요청 기준
+        failure-rate-threshold: 50                # 실패율 50% 초과 시 OPEN
+        minimum-number-of-calls: 5                # 최소 5번 요청 후 판단 시작
+
+        # OPEN → HALF-OPEN 전환
+        wait-duration-in-open-state: 10s          # 10초 후 HALF-OPEN 시도
+        permitted-number-of-calls-in-half-open-state: 3  # HALF-OPEN에서 3개 요청 테스트
+
+        # 자동 HALF-OPEN 전환 여부
+        automatic-transition-from-open-to-half-open-enabled: true
 
 server:
   port: 8080
-
