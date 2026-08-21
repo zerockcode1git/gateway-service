@@ -60,7 +60,7 @@ spring:
                  args:
                    name: reviewServiceCB
                    fallbackUri: forward:/fallback/reviews
-
+               - name: StatusCheck
 
             - id: order-service
               uri: http://order-service.order-service.svc.cluster.local:8084
@@ -68,6 +68,7 @@ spring:
                 - Path=/api/orders/**
               filters:
                 - StripPrefix=2
+                - name: StatusCheck
 
 resilience4j:
   circuitbreaker:
