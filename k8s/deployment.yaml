@@ -27,7 +27,7 @@ spec:
    spec:
      containers:
        - name: gateway-service
-         image: zerockcode1/gateway-service:sha-5cfab75
+         image: zerockcode1/gateway-service:sha-33aa440
          imagePullPolicy: Always
          ports:
            - containerPort: 8080
