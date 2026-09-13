@@ -147,6 +147,7 @@ spring:
                 - name: CircuitBreaker
                   args:
                     name: productServiceCB
+                    fallbackUri: forward:/fallback/products # Fallback 경로  
 
             - id: user-service
               uri: http://user-service.user-service.svc.cluster.local:8082
@@ -164,6 +165,8 @@ spring:
                 - name: CircuitBreaker
                   args:
                     name: reviewServiceCB
+                    fallbackUri: forward:/fallback/reviews  # Fallback 경로
+
 
             - id: order-service
               uri: http://order-service.order-service.svc.cluster.local:8084
