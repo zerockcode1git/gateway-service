@@ -137,6 +137,27 @@ spring:
     gateway:
       server:
         webflux:
+
+          globalcors:
+           cors-configurations:
+             '[/**]':                                    # 모든 경로에 적용
+               allowed-origin-patterns:
+                 - "*"
+               allowed-methods:
+                 - GET
+                 - POST
+                 - PUT
+                 - DELETE
+                 - PATCH
+                 - OPTIONS                              # Preflight 요청 필수
+               allowed-headers:
+                 - "*"                                  # 모든 헤더 허용
+               exposed-headers:
+                 - "Authorization"                      # 클라이언트에서 읽을 수 있는 헤더
+                 - "Content-Type"
+               allow-credentials: true                  # 쿠키/인증 정보 포함 허용
+               max-age: 3600
+
           routes:
             - id: product-service
               uri: http://product-service.product-service.svc.cluster.local:8081
@@ -148,6 +169,7 @@ spring:
                   args:
                     name: productServiceCB
                     fallbackUri: forward:/fallback/products # Fallback 경로  
+                - name: StatusCheck
 
             - id: user-service
               uri: http://user-service.user-service.svc.cluster.local:8082
@@ -192,8 +214,17 @@ resilience4j:
         automatic-transition-from-open-to-half-open-enabled: true
 
       productServiceCB:
+
+        sliding-window-type: COUNT_BASED          # 요청 횟수 기반
+        sliding-window-size: 10                   # 최근 10개 요청 기준
+        failure-rate-threshold: 50                # 실패율 50% 초과 시 OPEN
+        minimum-number-of-calls: 5                # 최소 5번 요청 후 판단 시작
+      
         # OPEN → HALF-OPEN 전환
-        wait-duration-in-open-state: 20s # 10초 후 HALF-OPEN 시도
+        wait-duration-in-open-state: 20s          # 10초 후 HALF-OPEN 시도
+        # 자동 HALF-OPEN 전환 여부
+        automatic-transition-from-open-to-half-open-enabled: true
+
 
       reviewServiceCB:
         sliding-window-type: COUNT_BASED # 요청 횟수 기반
@@ -207,6 +238,14 @@ resilience4j:
 
         # 자동 HALF-OPEN 전환 여부
         automatic-transition-from-open-to-half-open-enabled: true
+
+  timelimiter:
+    instances:
+      productServiceCB:
+        timeout-duration: 7s
+
+      reviewServiceCB:
+        timeout-duration: 7s
 
 server:
   port: 8080

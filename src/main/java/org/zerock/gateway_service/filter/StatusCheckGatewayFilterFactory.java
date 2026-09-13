@@ -13,17 +13,16 @@ import reactor.core.publisher.Mono;
 @Component
 public class StatusCheckGatewayFilterFactory extends AbstractGatewayFilterFactory<Object> {
 
-   @Override
-   public GatewayFilter apply(Object config) {
-       return (exchange, chain) -> chain.filter(exchange).then(Mono.defer(() -> {
-           HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
-           if (statusCode != null && statusCode.is5xxServerError()) {
-               return Mono.error(new ResponseStatusException(statusCode));
-           }else if(statusCode != null && statusCode.is4xxClientError()){
-               return Mono.error(new ResponseStatusException(statusCode));
-           }
-           return Mono.empty();
-       }));
+    @Override
+    public GatewayFilter apply(Object config) {
+        return (exchange, chain) -> chain.filter(exchange).then(Mono.defer(() -> {
+            HttpStatusCode statusCode = exchange.getResponse().getStatusCode();
+            if (statusCode != null && statusCode.is5xxServerError()) {
+                return Mono.error(new ResponseStatusException(statusCode));
+            } else if (statusCode != null && statusCode.is4xxClientError()) {
+                return Mono.error(new ResponseStatusException(statusCode));
+            }
+            return Mono.empty();
+        }));
     }
-   }
-
+}
